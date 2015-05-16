@@ -319,7 +319,7 @@ node[:drupal][:sites].each do |site_name, site|
             set -e
             #{cmd}
           EOF
-          only_if { ::File.exists?("#{base}/current") }
+          only_if { ::File.exists?("#{base}/current/.git") }
         end
 
         Chef::Log.debug("Drupal::default: after_restart: execute: /root/#{site_name}-files.sh")
