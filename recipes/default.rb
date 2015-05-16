@@ -47,8 +47,10 @@ node[:drupal][:sites].each do |site_name, site|
 
     base = "#{node[:drupal][:server][:base]}/#{site_name}"
     assets = "#{node[:drupal][:server][:assets]}/#{site_name}"
+    scheme = site[:repository][:uri][/^(\s+):/]
     Chef::Log.debug "drupal::default base = #{base}"
     Chef::Log.debug "drupal::default assets = #{assets}"
+    Chef::Log.debug "drupal::default repository scheme = #{scheme}"
 
     databag = search(:sites, "id:#{site_name}")
     Chef::Log.info "drupal::default databag = #{databag}"
@@ -62,7 +64,9 @@ node[:drupal][:sites].each do |site_name, site|
 #      mysql = "mysql -u #{drupal_user['db_user']} -p#{drupal_user['db_password']} #{site[:drupal][:settings][:db_name]} -h #{site[:drupal][:settings][:db_host]} -e "
 #      Chef::Log.debug "drupal::default mysql #{mysql.inspect}"
 
-    ssh_known_hosts_entry site[:repository][:host]
+    unless scheme == 'file'
+      ssh_known_hosts_entry site[:repository][:host]
+    end
 
     template "/root/#{site_name}-files.sh" do
       source 'files.sh.erb'
@@ -105,7 +109,6 @@ node[:drupal][:sites].each do |site_name, site|
     deploy base do
       only_if { site[:deploy][:action].any? { |action| action == 'deploy' } }
       repository site[:repository][:uri]
-      repository_schema = repository[/^(\s+):/]
       revision site[:repository][:revision]
       shallow_clone site[:repository][:shallow_clone]
       enable_submodules site[:repository][:submodule]
@@ -113,7 +116,7 @@ node[:drupal][:sites].each do |site_name, site|
 
       before_migrate do
         # If the repository has a file schema, then create a link to that
-        if repository_schema == 'file'
+        if scheme == 'file'
           repository_dir = repository[8..-1]
 
           bash "Remove the #{release_path} directory" do
