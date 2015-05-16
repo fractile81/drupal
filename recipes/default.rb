@@ -112,8 +112,27 @@ node[:drupal][:sites].each do |site_name, site|
       keep_releases site[:deploy][:releases]
 
       before_migrate do
+        # If the repository has a file schema, then create a link to that
+        if repository_schema == 'file'
+          repository_dir = repository[8..-1]
+
+          bash "Remove the #{release_path} directory" do
+            user 'root'
+            cmd = "rm -rf #{release_path}"
+            code <<-EOH
+              set -x
+              set -e
+              #{cmd}
+            EOH
+          end
+          
+          Chef::Log.debug("Drupal::default: before_migrate: link #{release_path} to #{repository_dir}")
+          link "#{release_path}" do
+            to "#{repository_dir}"
+            link_type :symbolic
+          end
         # If the Drush make hash is nil, then do nothing, else make the site
-        if site.has_key?("drush_make") && !site[:drush_make][:files].nil?
+        elsif site.has_key?("drush_make") && !site[:drush_make][:files].nil?
 
           # we are going to remove all the files in this folder, this will allow
           # the drush make to occur
@@ -300,7 +319,7 @@ node[:drupal][:sites].each do |site_name, site|
             set -e
             #{cmd}
           EOF
-          only_if { ::File.exists?("#{base}/current") && repository_schema != 'file' }
+          only_if { ::File.exists?("#{base}/current") }
         end
 
         Chef::Log.debug("Drupal::default: after_restart: execute: /root/#{site_name}-files.sh")
