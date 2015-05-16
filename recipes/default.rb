@@ -105,7 +105,7 @@ node[:drupal][:sites].each do |site_name, site|
     deploy base do
       only_if { site[:deploy][:action].any? { |action| action == 'deploy' } }
       repository site[:repository][:uri]
-      repository_schema repository[/^(\s+):/]
+      repository_schema = repository[/^(\s+):/]
       revision site[:repository][:revision]
       shallow_clone site[:repository][:shallow_clone]
       enable_submodules site[:repository][:submodule]
