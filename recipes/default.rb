@@ -160,7 +160,8 @@ node[:drupal][:sites].each do |site_name, site|
               :url => site[:repository][:uri],
               :branch => site[:repository][:revision],
               :profile => site[:drupal][:settings][:profile],
-              :includes => site[:drush_make][:files]
+              :includes => site[:drush_make][:files],
+              :download => scheme != 'file'
             )
             only_if { site[:drush_make][:template] == true }
           end

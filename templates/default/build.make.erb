@@ -7,7 +7,9 @@ includes[] = <%= file %>
   <% end %>
 <% end %>
 
+<% if @download %>
 projects[<%= @profile %>][download][type] = git
 projects[<%= @profile %>][download][url] = <%= @url %>
 projects[<%= @profile %>][download][branch] = <%= @branch %>
+<% end %>
 projects[<%= @profile %>][type] = profile
